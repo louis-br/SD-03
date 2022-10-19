@@ -1,5 +1,5 @@
-from Interfaces.Event import Event
-from Interfaces.State import State
+from Utils.Event import Event
+from Utils.State import State
 
 class MenuState(State):
     def __init__(self):

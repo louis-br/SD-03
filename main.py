@@ -1,4 +1,4 @@
-from Interfaces.EventHistory import EventHistory
+from Utils.EventHistory import EventHistory
 from MainMenu import MainMenu, CharTypedEvent
 
 menu: MainMenu = MainMenu()

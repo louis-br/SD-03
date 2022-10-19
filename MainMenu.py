@@ -1,6 +1,6 @@
-from Interfaces.Event import Event
-from Interfaces.MenuState import MenuState
-from Interfaces.State import subscribe, subscribed_class
+from Utils.Event import Event
+from Utils.MenuState import MenuState
+from Utils.State import subscribe, subscribed_class
 
 class MainMenuEvent(Event): base = None
 

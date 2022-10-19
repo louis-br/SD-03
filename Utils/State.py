@@ -1,4 +1,4 @@
-from Interfaces.Event import Event
+from Utils.Event import Event
 
 def subscribe(event):
     def decorator(method):

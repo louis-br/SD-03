@@ -1,8 +1,8 @@
 import queue
 from queue import Queue
 from threading import Semaphore
-from Interfaces.Event import Event
-from Interfaces.State import State
+from Utils.Event import Event
+from Utils.State import State
 
 class EventHistory:
     def __init__(self, initialState: State):
