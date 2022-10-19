@@ -1,5 +1,5 @@
 from Utils.EventHistory import EventHistory
-from MainMenu import MainMenu, CharTypedEvent
+from Client.MainMenu import MainMenu, CharTypedEvent
 
 menu: MainMenu = MainMenu()
 history: EventHistory = EventHistory(menu)
