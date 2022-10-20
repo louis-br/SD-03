@@ -18,7 +18,6 @@ def subscribed_class(old_class):
 class State:
     def __init__(self):
         self.context = None
-        pass
 
     def execute(self, event: Event):
         eventClass = event.__class__

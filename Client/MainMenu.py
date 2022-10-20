@@ -1,19 +1,39 @@
-from Utils.Event import Event
-from Utils.MenuState import MenuState
+from Client.MenuData import MenuData
+from Client.RegisterUserMenu import RegisterUserMenu
+from Utils.Input import KeyboardEvent
+from Utils.MenuState import MenuState, RenderEvent
 from Utils.State import subscribe, subscribed_class
-
-class MainMenuEvent(Event): base = None
-
-class CharTypedEvent(MainMenuEvent): pass
 
 @subscribed_class
 class MainMenu(MenuState):
-    def __init__(self):
-        pass
+    def __init__(self, data: MenuData=MenuData()):
+        super().__init__()
+        self.data = data
+        self.options = [
+            "Register user",
+            "Register appointment",
+            "Cancel appointment",
+            "Cancel alert",
+            "Show appointments"
+        ]
+        self.transitions = [
+            RegisterUserMenu
+        ]
 
     def render(self):
-        pass
+        self.clear()
+        print("User:", self.data.user)
+        self.print_options()
+        print("Option: ", end="")
 
-    @subscribe(CharTypedEvent)
-    def char_typed(self, event: CharTypedEvent):
-        print("Char typed: ", event, event.name, event.value)
+    def validate(self):
+        option = self.selectedOption
+        if option < len(self.transitions):
+            state = self.transitions[option]
+            self.change_state(state(self.data))
+
+    @subscribe(KeyboardEvent)
+    def char_typed(self, event: KeyboardEvent):
+        self.set_option(event)
+        if event.value == "":
+            self.validate()

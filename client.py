@@ -1,7 +1,9 @@
 from Utils.EventHistory import EventHistory
-from Client.MainMenu import MainMenu, CharTypedEvent
+from Utils.Input import Input
+from Client.MainMenu import MainMenu
 
-menu: MainMenu = MainMenu()
-history: EventHistory = EventHistory(menu)
+menu = MainMenu()
+history = EventHistory(menu)
+input = Input(history)
 
-history.add_and_process(CharTypedEvent("a"))
+input.start()
