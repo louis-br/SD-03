@@ -4,6 +4,7 @@ from threading import Semaphore
 from Utils.Event import Event
 from Utils.State import State
 
+
 class EventHistory:
     def __init__(self, initialState: State):
         self.queue = Queue()
@@ -11,7 +12,8 @@ class EventHistory:
         self.change_state(initialState)
 
     def process(self, block=False):
-        if not self.mutex.acquire(blocking=False): return
+        if not self.mutex.acquire(blocking=False):
+            return
         try:
             while True:
                 event = self.queue.get(block)

@@ -2,7 +2,10 @@ from Utils.Event import Event
 from Utils.State import State
 from Utils.Input import KeyboardEvent
 
-class RenderEvent(Event): pass
+
+class RenderEvent(Event):
+    pass
+
 
 class MenuState(State):
     def __init__(self):
@@ -17,12 +20,14 @@ class MenuState(State):
     def print_options(self):
         for option in range(len(self.options)):
             head = f' {option+1}.'
-            if option == self.selectedOption: head = ">" + head[1:]
+            if option == self.selectedOption:
+                head = ">" + head[1:]
             print(head, self.options[option])
 
     def set_option(self, event: KeyboardEvent):
         for word in event.value.split(" "):
-            if not word.isdigit(): continue
+            if not word.isdigit():
+                continue
             word = int(word) - 1
             if word >= 0 and word < len(self.options):
                 self.selectedOption = word

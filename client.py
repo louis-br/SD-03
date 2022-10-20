@@ -4,6 +4,6 @@ from Client.MainMenu import MainMenu
 
 menu = MainMenu()
 history = EventHistory(menu)
-input = Input(history)
+keyboardInput = Input(history)
 
-input.start()
+keyboardInput.start()

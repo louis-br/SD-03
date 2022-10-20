@@ -13,8 +13,10 @@ nameserver.register("Agenda", uri)
 
 print("Starting nameserver: ", nameserverUri)
 
+
 def run_nameserver():
     nameserverDaemon.requestLoop()
+
 
 thread = ThreadPoolExecutor()
 thread.submit(run_nameserver)

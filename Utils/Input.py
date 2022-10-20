@@ -1,7 +1,10 @@
 from Utils.Event import Event
 from Utils.EventHistory import EventHistory
 
-class KeyboardEvent(Event): pass
+
+class KeyboardEvent(Event):
+    pass
+
 
 class Input():
     def __init__(self, context: EventHistory):

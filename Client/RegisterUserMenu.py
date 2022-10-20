@@ -3,9 +3,10 @@ from Utils.Input import KeyboardEvent
 from Utils.MenuState import MenuState, RenderEvent
 from Utils.State import subscribe, subscribed_class
 
+
 @subscribed_class
 class RegisterUserMenu(MenuState):
-    def __init__(self, data: MenuData=MenuData()):
+    def __init__(self, data: MenuData = MenuData()):
         from Client.MainMenu import MainMenu
         super().__init__()
         self.data = data
@@ -18,5 +19,6 @@ class RegisterUserMenu(MenuState):
     def char_typed(self, event: KeyboardEvent):
         self.data.user = event.value
         self.change_state(Client.MainMenu.MainMenu(self.data))
+
 
 import Client.MainMenu

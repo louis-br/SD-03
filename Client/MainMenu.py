@@ -4,9 +4,10 @@ from Utils.Input import KeyboardEvent
 from Utils.MenuState import MenuState, RenderEvent
 from Utils.State import subscribe, subscribed_class
 
+
 @subscribed_class
 class MainMenu(MenuState):
-    def __init__(self, data: MenuData=MenuData()):
+    def __init__(self, data: MenuData = MenuData()):
         super().__init__()
         self.data = data
         self.options = [
