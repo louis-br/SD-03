@@ -9,7 +9,7 @@ nameserverUri, nameserverDaemon, _ = Pyro5.nameserver.start_ns()
 
 nameserver = nameserverDaemon.nameserver
 uri = daemon.register(Server)
-nameserver.register("Schedule", uri)
+nameserver.register("Agenda", uri)
 
 print("Starting nameserver: ", nameserverUri)
 
