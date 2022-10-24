@@ -1,3 +1,4 @@
+from Client.Client import Client
 from Client.MenuData import MenuData
 from Client.PromptMenu import PromptMenu, PromptAnsweredEvent
 from Client.NewAppointmentMenu import NewAppointmentMenu, NewAppointmentEvent
@@ -41,6 +42,9 @@ class MainMenu(MenuState):
             ),
             (lambda: None, lambda: None)
         ]
+
+    def set_client(self, client: Client):
+        self.client = client
 
     def render(self):
         self.clear()

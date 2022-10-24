@@ -1,6 +1,6 @@
 import queue
 from queue import Queue
-from threading import Semaphore
+from threading import Lock
 from Utils.Event import Event
 from Utils.State import State
 
@@ -8,7 +8,7 @@ from Utils.State import State
 class EventHistory:
     def __init__(self, initialState: State):
         self.queue = Queue()
-        self.mutex = Semaphore()
+        self.mutex = Lock()
         self.change_state(initialState)
 
     def process(self, block=False):
