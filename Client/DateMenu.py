@@ -8,8 +8,6 @@ from datetime import datetime
 
 class DateSetEvent(Event):
     key: Any
-    pass
-
 
 def get_datetime_dict(d: datetime):
     return {

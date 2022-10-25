@@ -4,6 +4,7 @@ from Pyro5.server import expose
 from concurrent.futures import ThreadPoolExecutor
 from Utils.Appointment import Appointment
 from Utils.EventHistory import EventHistory
+from Utils.Cryptography.Signer import Signer
 from Client.AppointmentEventMenu import AppointmentEventMenu
 from Client.AlertEventMenu import AlertEventMenu
 from datetime import datetime
@@ -28,6 +29,9 @@ class Client():
         self.thread: ThreadPoolExecutor = ThreadPoolExecutor()
         self.thread.submit(self.request_loop)
 
+        self.public_key = None
+        self.signer = Signer()
+
     def request_loop(self):
         self.daemon.requestLoop()
 
@@ -41,8 +45,9 @@ class Client():
 
     def register_user(self, user: str):
         self.user = user
-        self.publickey = self.server.register_user(user, self.URI)
-        print(self.publickey)
+        self.public_key = self.server.register_user(user, self.URI)
+        print(self.public_key)
+        self.signer.from_public_key_b64(self.public_key)
 
     def register_appointment(self, name: str, date: datetime, guests: dict[str, True], alerts: dict[str, datetime]):
         date = date.timestamp()
@@ -63,7 +68,8 @@ class Client():
         return self.server.get_appointments(self.user)
 
     @expose
-    def new_appointment_event(self, appointment: dict[str]):
+    def new_appointment_event(self, appointment: dict[str], signature: str):
+        self.signer.verify_b64(signature, self.json_dict_bytes(appointment))
         lastState = self.context.state
         self.context.change_state(AppointmentEventMenu(self, lastState, appointment))
 

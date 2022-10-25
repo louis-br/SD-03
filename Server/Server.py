@@ -3,6 +3,7 @@ from Pyro5.server import expose
 from datetime import datetime
 from threading import Lock, Timer
 from Utils.Appointment import Appointment
+from Utils.Cryptography.Signer import Signer
 
 
 def printcall(f):
@@ -27,7 +28,9 @@ class Server(object):
         self.appointments: dict[str, list[Appointment]] = {}
         self.scheduledAlerts: dict[datetime, ScheduledAlerts] = {}
         self.appointmentsMutex = Lock()
-        pass
+
+        self.signer = Signer()
+        self.signer.generate()
 
     def get_user(self, user: str):
         with self.usersMutex:
@@ -40,7 +43,7 @@ class Server(object):
     def register_user(self, user: str, uri: str):
         with self.usersMutex:
             self.users[user] = uri
-        return "key"
+        return self.signer.public_key_b64()
 
     def alert(self, time: datetime):
         if time not in self.scheduledAlerts:
@@ -105,7 +108,9 @@ class Server(object):
     def new_appointment_event(self, user: str, appointment: Appointment):
         user = self.get_user(user)
         if user:
-            user.new_appointment_event(appointment.to_dict())
+            appointment = appointment.to_dict()
+            signature = self.signer.sign_b64(self.signer.json_dict_bytes(appointment))
+            user.new_appointment_event(appointment, signature)
 
     def alert_event(self, user: str, appointment: Appointment):
         user = self.get_user(user)
