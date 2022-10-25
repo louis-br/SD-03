@@ -38,8 +38,6 @@ class AppointmentEventMenu(MenuState):
     def keyboard_input(self, event: KeyboardEvent):
         self.set_option(event)
         if event.value == "":
-            print(self.selectedOption)
-            input()
             if self.selectedOption == 1:
                 self.change_state(DateMenu(self))
             elif self.selectedOption == 2:

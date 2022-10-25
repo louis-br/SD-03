@@ -45,12 +45,15 @@ class Client():
         print(self.publickey)
 
     def register_appointment(self, name: str, date: datetime, guests: dict[str, True], alerts: dict[str, datetime]):
+        date = date.timestamp()
+        alerts = {user: alert.timestamp() for user, alert in alerts.items()}
         self.server.register_appointment(self.user, name, date, guests, alerts)
 
     def cancel_appointment(self, appointmentName: str):
         self.server.cancel_appointment(self.user, appointmentName)
 
     def register_alert(self, appointmentName: str, alert: datetime):
+        alert = alert.timestamp()
         self.server.register_alert(self.user, appointmentName, alert)
 
     def cancel_alert(self, appointmentName: str):

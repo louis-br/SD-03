@@ -11,6 +11,7 @@ from datetime import datetime
 class NewAppointmentEvent(Event):
     appointment: str = ""
     users: list[str] = []
+    alert: datetime = None
 
 
 @subscribed_class
@@ -21,7 +22,8 @@ class NewAppointmentMenu(MenuState):
         self.lastState: State = lastState
         self.optionsValues = [
             lambda: self.change_state(PromptMenu(lastState=self, key="appointment", string="name")),
-            lambda: self.change_state(DateMenu(self)),
+            lambda: self.change_state(DateMenu(self, key="date")),
+            lambda: self.change_state(DateMenu(self, key="alert")),
             lambda: self.change_state(PromptMenu(lastState=self, key="users", string="users")),
             lambda: self.validate()
         ]
@@ -34,6 +36,7 @@ class NewAppointmentMenu(MenuState):
         self.options = [
             f'Name: {self.event.appointment}',
             f'Date: {self.event.value}',
+            f'Alert: {self.event.alert}',
             f'Invited users: {self.event.users}',
             "Submit"
         ]
@@ -46,7 +49,10 @@ class NewAppointmentMenu(MenuState):
 
     @subscribe(DateSetEvent)
     def date_set(self, event: DateSetEvent):
-        self.event.value = event.value
+        if event.key == "date":
+            self.event.value = event.value
+        else:
+            self.event.alert = event.value
 
     @subscribe(PromptAnsweredEvent)
     def prompt_answer(self, event: PromptAnsweredEvent):

@@ -53,7 +53,7 @@ class MainMenu(MenuState):
         name = event.appointment
         date = event.value
         guests = {guest: True for guest in event.users}
-        alerts = {}
+        alerts = {self.data.user: event.alert} if event.alert else {}
         self.client.register_appointment(name, date, guests, alerts)
         self.status = f'Registered appointment: {name} {date}'
 

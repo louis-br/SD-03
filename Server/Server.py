@@ -1,7 +1,7 @@
 import Pyro5.api
 from Pyro5.server import expose
 from datetime import datetime
-from threading import Lock
+from threading import Lock, Timer
 from Utils.Appointment import Appointment
 
 
@@ -15,8 +15,8 @@ def printcall(f):
 
 
 class ScheduledAlerts():
-    def __init__(self, event=None, appointments: list[Appointment] = []):
-        self.event = event
+    def __init__(self, timer: Timer = None, appointments: list[Appointment] = []):
+        self.timer = timer
         self.appointments: list[Appointment] = appointments
 
 
@@ -42,6 +42,20 @@ class Server(object):
             self.users[user] = uri
         return "key"
 
+    def alert(self, time: datetime):
+        if time not in self.scheduledAlerts:
+            return
+        alert = self.scheduledAlerts[time]
+        for appointment in alert.appointments:
+            for user in appointment.alerts.keys():
+                self.alert_event(user, appointment)
+
+    def new_alert_timer(self, time: datetime):
+        print(f'New timer: {time}')
+        timer = Timer((time - datetime.now()).total_seconds(), self.alert, args=(time,))
+        timer.start()
+        return timer
+
     def get_appointment_by_name(self, user: str, appointmentName: str):
         appointment = self.appointments[user] if user in self.appointments else []
         appointment = [a for a in appointment if a.name == appointmentName]
@@ -56,6 +70,8 @@ class Server(object):
         appointments = self.appointments[user]
         appointments.append(appointment)
         appointments.sort()
+        for user, alert in appointment.alerts.items():
+            self.add_user_alert(user, appointment, alert)
 
     def remove_user_appointment(self, user: str, appointmentName: str):
         appointment: Appointment = self.get_appointment_by_name(user, appointmentName)
@@ -71,7 +87,7 @@ class Server(object):
         if alert in self.scheduledAlerts:
             self.scheduledAlerts[alert].appointments.append(appointment)
         else:
-            self.scheduledAlerts[alert] = ScheduledAlerts('TODO', [appointment])
+            self.scheduledAlerts[alert] = ScheduledAlerts(self.new_alert_timer(alert), [appointment])
 
     def remove_user_alert(self, user: str, appointmentName: str):
         appointment: Appointment = self.get_appointment_by_name(user, appointmentName)
@@ -83,20 +99,24 @@ class Server(object):
         if len([a for a in appointment.alerts.values() if a == alert]) == 0:
             self.scheduledAlerts[alert].appointments.remove(appointment)
         if (len(self.scheduledAlerts[alert].appointments) == 0):
-            # self.scheduledAlerts[alert].cancel()
+            self.scheduledAlerts[alert].timer.cancel()
             del self.scheduledAlerts[alert]
 
     def new_appointment_event(self, user: str, appointment: Appointment):
         user = self.get_user(user)
-        user.new_appointment_event(appointment.to_dict())
+        if user:
+            user.new_appointment_event(appointment.to_dict())
 
     def alert_event(self, user: str, appointment: Appointment):
         user = self.get_user(user)
-        user.alert_event(appointment.to_dict())
+        if user:
+            user.alert_event(appointment.to_dict())
 
     @expose
     @printcall
-    def register_appointment(self, user: str, name: str, date: datetime, guests: dict[str, True], alerts: dict[str, datetime]):
+    def register_appointment(self, user: str, name: str, date: float, guests: dict[str, True], alerts: dict[str, float]):
+        date = datetime.fromtimestamp(date)
+        alerts = {user: datetime.fromtimestamp(alert) for user, alert in alerts.items()}
         with self.appointmentsMutex:
             if name in self.appointments:
                 print(f'Appointment {name} already registered')
@@ -117,7 +137,8 @@ class Server(object):
 
     @expose
     @printcall
-    def register_alert(self, user: str, appointmentName: str, alert: datetime):
+    def register_alert(self, user: str, appointmentName: str, alert: float):
+        alert = datetime.fromtimestamp(alert)
         with self.appointmentsMutex:
             appointment = self.get_appointment_by_name(user, appointmentName)
             if not appointment:
