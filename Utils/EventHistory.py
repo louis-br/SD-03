@@ -7,8 +7,9 @@ from Utils.State import State
 
 class EventHistory:
     def __init__(self, initialState: State):
-        self.queue = Queue()
-        self.mutex = Lock()
+        self.queue: Queue = Queue()
+        self.mutex: Lock = Lock()
+        self.stateMutex: Lock = Lock()
         self.change_state(initialState)
 
     def process(self, block=False):
@@ -27,8 +28,9 @@ class EventHistory:
         self.process(block)
 
     def change_state(self, state: State):
-        self.state = state
-        self.state.set_context(self)
+        with self.stateMutex:
+            self.state: State = state
+            self.state.set_context(self)
 
     def add(self, event: Event):
         self.queue.put(event)

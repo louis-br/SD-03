@@ -11,8 +11,9 @@ from Utils.State import subscribe, subscribed_class
 class MainMenu(MenuState):
     def __init__(self, data: MenuData = MenuData()):
         super().__init__()
-        self.data = data
-        self.options = [
+        self.data: MenuData = data
+        self.status: str = ""
+        self.options: list[str] = [
             "Register user",
             "Register appointment",
             "Cancel appointment",
@@ -20,27 +21,11 @@ class MainMenu(MenuState):
             "Show appointments"
         ]
         self.optionsValues = [
-            (lambda: self.change_state(
-                PromptMenu(lastState=self, key=0, string="user")
-            ),
-                lambda e: self.register_user(e)
-            ),
-            (lambda: self.change_state(
-                NewAppointmentMenu(self, self.data)
-            ),
-                lambda e: self.register_appointment(e)
-            ),
-            (lambda: self.change_state(
-                PromptMenu(lastState=self, key=2, string="appointment")
-            ),
-                lambda e: self.cancel_appointment(e)
-            ),
-            (lambda: self.change_state(
-                PromptMenu(lastState=self, key=3, string="appointment")
-            ),
-                lambda e: self.cancel_alert(e)
-            ),
-            (lambda: None, lambda: None)
+            (lambda: self.change_state(PromptMenu(lastState=self, key=0, string="user")), lambda e: self.register_user(e)),
+            (lambda: self.change_state(NewAppointmentMenu(self, self.data)), lambda e: self.register_appointment(e)),
+            (lambda: self.change_state(PromptMenu(lastState=self, key=2, string="appointment")), lambda e: self.cancel_appointment(e)),
+            (lambda: self.change_state(PromptMenu(lastState=self, key=3, string="appointment")), lambda e: self.cancel_alert(e)),
+            (lambda: self.show_appointments(), lambda: None)
         ]
 
     def set_client(self, client: Client):
@@ -48,33 +33,45 @@ class MainMenu(MenuState):
 
     def render(self):
         self.clear()
-        print(f'User: {self.data.userStatus["user"]}\
- ({self.data.userStatus["status"]})')
+        print(f'User: {self.data.user}')
+        print(f'Status: {self.status}')
         self.print_options()
         print("Option: ", end="")
 
     def validate(self):
         option = self.selectedOption
         if option < len(self.optionsValues):
-            print("Option: ", self.optionsValues[option])
             self.optionsValues[option][0]()
 
     def register_user(self, event: PromptAnsweredEvent):
-        print("Registered user: ", event.value)
-        self.data.userStatus['user'] = event.value
-    #   self.data.userStatus['status'] = "Registering"
-        input()
+        user = event.value
+        self.data.user = user
+        self.client.register_user(user)
+        self.status = f'Registered user: {event.value}'
 
     def register_appointment(self, event: NewAppointmentEvent):
-        print("Registered appointment: ", event.value)
-        input()
+        name = event.appointment
+        date = event.value
+        guests = {guest: True for guest in event.users}
+        alerts = {}
+        self.client.register_appointment(name, date, guests, alerts)
+        self.status = f'Registered appointment: {name} {date}'
 
     def cancel_appointment(self, event: PromptAnsweredEvent):
-        print("Canceled appointment: ", event.value)
-        input()
+        self.client.cancel_appointment(event.value)
+        self.status = f'Canceled appointment: {event.value}'
 
     def cancel_alert(self, event: PromptAnsweredEvent):
-        print("Canceled alert: ", event.value)
+        self.client.cancel_alert(event.value)
+        self.status = f'Canceled alert: {event.value}'
+
+    def show_appointments(self):
+        appointments = self.client.get_appointments()
+        if appointments:
+            for appointment in appointments:
+                print(appointment)
+        else:
+            print("No appointments found. ")
         input()
 
     @subscribe(PromptAnsweredEvent)
@@ -86,7 +83,7 @@ class MainMenu(MenuState):
         self.register_appointment(event)
 
     @subscribe(KeyboardEvent)
-    def char_typed(self, event: KeyboardEvent):
+    def keyboard_input(self, event: KeyboardEvent):
         self.set_option(event)
         if event.value == "":
             self.validate()

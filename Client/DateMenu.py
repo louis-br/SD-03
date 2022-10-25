@@ -1,3 +1,4 @@
+from typing import Any
 from Utils.Event import Event
 from Utils.Input import KeyboardEvent
 from Utils.MenuState import MenuState, RenderEvent
@@ -6,6 +7,7 @@ from datetime import datetime
 
 
 class DateSetEvent(Event):
+    key: Any
     pass
 
 
@@ -17,17 +19,19 @@ def get_datetime_dict(d: datetime):
         'hour': d.hour,
         'minute': d.minute,
         'second': d.second,
+        'microsecond': 0
     }
 
 
 @subscribed_class
 class DateMenu(MenuState):
-    def __init__(self, lastState: State):
+    def __init__(self, lastState: State, key: Any = ""):
         super().__init__()
-        self.lastState = lastState
-        self.attributes = ["year", "month", "day", "hour", "minute", "second"]
-        self.newDatetime = {}
-        self.currentAttribute = ""
+        self.key: Any = key
+        self.lastState: State = lastState
+        self.attributes: list[str] = ["year", "month", "day", "hour", "minute", "second"]
+        self.newDatetime: dict[str, int] = {}
+        self.currentAttribute: str = ""
         self.calculate_datetime()
 
     def render(self):
@@ -51,22 +55,24 @@ class DateMenu(MenuState):
             print("Option: ", end="")
 
     def calculate_datetime(self):
-        self.datetime = datetime.now()
+        self.datetime: datetime = datetime.now()
         now = get_datetime_dict(self.datetime)
         for attr in self.attributes:
             if attr in self.newDatetime:
                 now[attr] = self.newDatetime[attr]
-        self.datetime = datetime(**now)
+        self.datetime: datetime = datetime(**now)
 
     def reset(self):
         self.newDatetime = {}
 
     def validate(self):
         self.change_state(self.lastState)
-        self.context.add_and_process(DateSetEvent(self.datetime))
+        event = DateSetEvent(self.datetime)
+        event.key = self.key
+        self.context.add_and_process(event)
 
     @subscribe(KeyboardEvent)
-    def char_typed(self, event: KeyboardEvent):
+    def keyboard_input(self, event: KeyboardEvent):
         if self.currentAttribute != "" and event.value.isdigit():
             self.newDatetime[self.currentAttribute] = int(event.value)
             self.currentAttribute = ""

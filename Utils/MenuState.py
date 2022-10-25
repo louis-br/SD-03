@@ -10,8 +10,8 @@ class RenderEvent(Event):
 class MenuState(State):
     def __init__(self):
         super().__init__()
-        self.options = []
-        self.selectedOption = 0
+        self.options: list[str] = []
+        self.selectedOption: int = 0
 
     def execute(self, event: Event):
         super().execute(event)

@@ -1,6 +1,5 @@
 from typing import Any
 from Utils.Event import Event
-from Client.MenuData import MenuData
 from Utils.Input import KeyboardEvent
 from Utils.MenuState import MenuState
 from Utils.State import State, subscribe, subscribed_class
@@ -13,19 +12,18 @@ class PromptAnsweredEvent(Event):
 
 @subscribed_class
 class PromptMenu(MenuState):
-    def __init__(self, lastState: State, key: Any = "", string: str = "", data: MenuData = MenuData()):
+    def __init__(self, lastState: State, key: Any = "", string: str = ""):
         super().__init__()
-        self.data = data
-        self.lastState = lastState
-        self.key = key
-        self.string = string
+        self.lastState: State = lastState
+        self.key: Any = key
+        self.string: str = string
 
     def render(self):
         self.clear()
         print(f'Enter {self.string}: ', end="")
 
     @subscribe(KeyboardEvent)
-    def char_typed(self, event: KeyboardEvent):
+    def keyboard_input(self, event: KeyboardEvent):
         self.change_state(self.lastState)
         answer = PromptAnsweredEvent(event.value)
         answer.key = self.key

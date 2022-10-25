@@ -8,7 +8,7 @@ class KeyboardEvent(Event):
 
 class Input():
     def __init__(self, context: EventHistory):
-        self.context = context
+        self.context: EventHistory = context
 
     def start(self):
         try:

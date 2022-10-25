@@ -17,23 +17,19 @@ class NewAppointmentEvent(Event):
 class NewAppointmentMenu(MenuState):
     def __init__(self, lastState: State, data: MenuData = MenuData()):
         super().__init__()
-        self.data = data
-        self.lastState = lastState
+        self.data: MenuData = data
+        self.lastState: State = lastState
         self.optionsValues = [
-            lambda: self.change_state(
-                PromptMenu(lastState=self, key="appointment", string="name")
-            ),
+            lambda: self.change_state(PromptMenu(lastState=self, key="appointment", string="name")),
             lambda: self.change_state(DateMenu(self)),
-            lambda: self.change_state(
-                PromptMenu(lastState=self, key="users", string="users")
-            ),
+            lambda: self.change_state(PromptMenu(lastState=self, key="users", string="users")),
             lambda: self.validate()
         ]
-        self.event = NewAppointmentEvent(datetime.now())
+        self.event: NewAppointmentEvent = NewAppointmentEvent(datetime.now())
 
     def render(self):
         self.clear()
-        print(f'User: {self.data.userStatus["user"]}')
+        print(f'User: {self.data.user}')
         print("Edit appointment")
         self.options = [
             f'Name: {self.event.appointment}',
@@ -62,7 +58,7 @@ class NewAppointmentMenu(MenuState):
             self.event.appointment = value
 
     @subscribe(KeyboardEvent)
-    def char_typed(self, event: KeyboardEvent):
+    def keyboard_input(self, event: KeyboardEvent):
         self.set_option(event)
         if event.value == "":
             self.optionsValues[self.selectedOption]()
