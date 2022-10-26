@@ -9,6 +9,7 @@ from datetime import datetime
 class DateSetEvent(Event):
     key: Any
 
+
 def get_datetime_dict(d: datetime):
     return {
         'year': d.year,
