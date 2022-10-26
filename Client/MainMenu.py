@@ -5,6 +5,8 @@ from Client.NewAppointmentMenu import NewAppointmentMenu, NewAppointmentEvent
 from Utils.Input import KeyboardEvent
 from Utils.MenuState import MenuState
 from Utils.State import subscribe, subscribed_class
+from Client.DateMenu import DateMenu, DateSetEvent
+from datetime import datetime
 
 
 @subscribed_class
@@ -25,7 +27,7 @@ class MainMenu(MenuState):
             (lambda: self.change_state(NewAppointmentMenu(self, self.data)), lambda e: self.register_appointment(e)),
             (lambda: self.change_state(PromptMenu(lastState=self, key=2, string="appointment")), lambda e: self.cancel_appointment(e)),
             (lambda: self.change_state(PromptMenu(lastState=self, key=3, string="appointment")), lambda e: self.cancel_alert(e)),
-            (lambda: self.show_appointments(), lambda: None)
+            (lambda: self.change_state(DateMenu(self, key="show")), lambda e: None)  # self.show_appointments(e)
         ]
 
     def set_client(self, client: Client):
@@ -65,11 +67,15 @@ class MainMenu(MenuState):
         self.client.cancel_alert(event.value)
         self.status = f'Canceled alert: {event.value}'
 
-    def show_appointments(self):
+    @subscribe(DateSetEvent)
+    def show_appointments(self, event: DateSetEvent):
+        date = event.value
         appointments = self.client.get_appointments()
         if appointments:
             for appointment in appointments:
-                print(appointment)
+                appointmentDate = datetime.fromtimestamp(appointment['date'])
+                if appointmentDate.year == date.year and appointmentDate.month == date.month and appointmentDate.day == date.day:
+                    print(appointment)
         else:
             print("No appointments found. ")
         input()

@@ -28,7 +28,8 @@ class AppointmentEventMenu(MenuState):
         print("Option: ", end="")
 
     def participate(self):
-        self.client.register_alert(self.appointment['name'], self.alert)
+        if self.alert:
+            self.client.register_alert(self.appointment['owner'], self.appointment['name'], self.alert)
 
     @subscribe(DateSetEvent)
     def date_set(self, event: DateSetEvent):

@@ -4,11 +4,13 @@ from concurrent.futures import ThreadPoolExecutor
 
 from Server.Server import Server
 
+server = Server()
+
 daemon = Pyro5.server.Daemon()
 nameserverUri, nameserverDaemon, _ = Pyro5.nameserver.start_ns()
 
 nameserver = nameserverDaemon.nameserver
-uri = daemon.register(Server)
+uri = daemon.register(server)
 nameserver.register("Agenda", uri)
 
 print("Starting nameserver: ", nameserverUri)

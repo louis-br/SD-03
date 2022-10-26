@@ -5,6 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 from Utils.Appointment import Appointment
 from Utils.EventHistory import EventHistory
 from Utils.Cryptography.Signer import Signer
+from cryptography.exceptions import UnsupportedAlgorithm
 from Client.AppointmentEventMenu import AppointmentEventMenu
 from Client.AlertEventMenu import AlertEventMenu
 from datetime import datetime
@@ -57,9 +58,9 @@ class Client():
     def cancel_appointment(self, appointmentName: str):
         self.server.cancel_appointment(self.user, appointmentName)
 
-    def register_alert(self, appointmentName: str, alert: datetime):
+    def register_alert(self, owner: str, appointmentName: str, alert: datetime):
         alert = alert.timestamp()
-        self.server.register_alert(self.user, appointmentName, alert)
+        self.server.register_alert(self.user, owner, appointmentName, alert)
 
     def cancel_alert(self, appointmentName: str):
         self.server.cancel_alert(self.user, appointmentName)
@@ -69,9 +70,12 @@ class Client():
 
     @expose
     def new_appointment_event(self, appointment: dict[str], signature: str):
-        self.signer.verify_b64(signature, self.json_dict_bytes(appointment))
-        lastState = self.context.state
-        self.context.change_state(AppointmentEventMenu(self, lastState, appointment))
+        try:
+            self.signer.verify_b64(signature, self.signer.json_dict_bytes(appointment))
+            lastState = self.context.state
+            self.context.change_state(AppointmentEventMenu(self, lastState, appointment))
+        except UnsupportedAlgorithm:
+            input("Invalid signature! ")
 
     @expose
     def alert_event(self, appointment: dict[str]):

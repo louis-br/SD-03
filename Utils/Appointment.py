@@ -13,9 +13,9 @@ class Appointment():
         return {
             'owner': self.owner,
             'name': self.name,
-            'date': self.date,
-            'guests': self.guests,
-            'alerts': self.alerts
+            'date': self.date.timestamp(),
+            'guests': {guest: True for guest in self.guests.keys()},
+            'alerts': {user: alert.timestamp() for user, alert in self.alerts.items()}
         }
 
     def __lt__(self, other):

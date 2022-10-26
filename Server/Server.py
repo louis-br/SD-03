@@ -35,6 +35,7 @@ class Server(object):
     def get_user(self, user: str):
         with self.usersMutex:
             if user not in self.users:
+                print(f'User: {user} not found. ')
                 return None
             return Pyro5.api.Proxy(self.users[user])
 
@@ -50,8 +51,9 @@ class Server(object):
             return
         alert = self.scheduledAlerts[time]
         for appointment in alert.appointments:
-            for user in appointment.alerts.keys():
-                self.alert_event(user, appointment)
+            for user, expected in appointment.alerts.items():
+                if expected == time:
+                    self.alert_event(user, appointment)
 
     def new_alert_timer(self, time: datetime):
         print(f'New timer: {time}')
@@ -108,9 +110,9 @@ class Server(object):
     def new_appointment_event(self, user: str, appointment: Appointment):
         user = self.get_user(user)
         if user:
-            appointment = appointment.to_dict()
-            signature = self.signer.sign_b64(self.signer.json_dict_bytes(appointment))
-            user.new_appointment_event(appointment, signature)
+            dict = appointment.to_dict()
+            signature = self.signer.sign_b64(self.signer.json_dict_bytes(dict))
+            user.new_appointment_event(dict, signature)
 
     def alert_event(self, user: str, appointment: Appointment):
         user = self.get_user(user)
@@ -142,12 +144,13 @@ class Server(object):
 
     @expose
     @printcall
-    def register_alert(self, user: str, appointmentName: str, alert: float):
+    def register_alert(self, user: str, owner: str, appointmentName: str, alert: float):
         alert = datetime.fromtimestamp(alert)
         with self.appointmentsMutex:
-            appointment = self.get_appointment_by_name(user, appointmentName)
+            appointment = self.get_appointment_by_name(owner, appointmentName)
             if not appointment:
                 return
+            self.add_user_appointment(user, appointment)
             self.add_user_alert(user, appointment, alert)
 
     @expose
