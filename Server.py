@@ -1,9 +1,6 @@
-import Pyro5.api
-from Pyro5.server import expose
 from datetime import datetime
 from threading import Lock, Timer
 from Utils.Appointment import Appointment
-from Utils.Cryptography.Signer import Signer
 
 
 def printcall(f):
@@ -29,9 +26,6 @@ class Server(object):
         self.scheduledAlerts: dict[datetime, ScheduledAlerts] = {}
         self.appointmentsMutex = Lock()
 
-        self.signer = Signer()
-        self.signer.generate()
-
     def get_user(self, user: str):
         with self.usersMutex:
             if user not in self.users:
@@ -39,7 +33,7 @@ class Server(object):
                 return None
             return Pyro5.api.Proxy(self.users[user])
 
-    @expose
+    #@expose
     @printcall
     def register_user(self, user: str, uri: str):
         with self.usersMutex:
@@ -119,7 +113,7 @@ class Server(object):
         if user:
             user.alert_event(appointment.to_dict())
 
-    @expose
+    #@expose
     @printcall
     def register_appointment(self, user: str, name: str, date: float, guests: dict[str, True], alerts: dict[str, float]):
         date = datetime.fromtimestamp(date)
@@ -136,13 +130,13 @@ class Server(object):
                 self.new_appointment_event(guest, appointment)
             self.add_user_appointment(user, appointment)
 
-    @expose
+    #@expose
     @printcall
     def cancel_appointment(self, user: str, appointmentName: str):
         with self.appointmentsMutex:
             self.remove_user_appointment(user, appointmentName)
 
-    @expose
+    #@expose
     @printcall
     def register_alert(self, user: str, owner: str, appointmentName: str, alert: float):
         alert = datetime.fromtimestamp(alert)
@@ -153,13 +147,13 @@ class Server(object):
             self.add_user_appointment(user, appointment)
             self.add_user_alert(user, appointment, alert)
 
-    @expose
+    #@expose
     @printcall
     def cancel_alert(self, user: str, appointmentName: str):
         with self.appointmentsMutex:
             self.remove_user_alert(user, appointmentName)
 
-    @expose
+    #@expose
     @printcall
     def get_appointments(self, user: str):
         with self.appointmentsMutex:
