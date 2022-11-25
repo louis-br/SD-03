@@ -1,1 +1,29 @@
-Hello
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="index.js"></script>
+    </head>
+    <body style="display: flex; align-items: center; height: 100vh; margin: auto; width: max-content;">
+        <div>
+            User:   <input id="username" type="text" placeholder="user" value="user"><input id="register" type="button" value="Register" onclick="register();"><br>
+            Name:   <input id="appointmentName" type="text" placeholder="Appointment" value="Appointment"><br>
+            Date:   <input id="date" type="datetime-local" step="1"><br>
+            Alert:  <input id="alert" type="datetime-local" step="1"><input id="alertEnabled" type="checkbox"><br>
+            Guests: <input id="guests" type="text" placeholder="user,guest" value="user,guest"><br>
+            <input id="submit" type="button" value="Submit" onclick="newAppointment();">
+            <input id="cancel" type="button" value="Cancel" onclick="cancel();">
+            <input id="cancelAlert" type="button" value="Cancel alert" onclick="cancelAlert();">
+            <input id="refresh" type="button" value="Refresh" onclick="updateAppointments();"><br><br>
+        Join appointment:<br>
+            Owner:  <input id="joinOwner" type="text" placeholder="user" value="user"><br>
+            Name:   <input id="joinAppointmentName" type="text" placeholder="Appointment" value="Appointment"><br>
+            Alert:  <input id="joinAlert" type="datetime-local" step="1"><input id="alertEnabled" type="checkbox"><input id="joinAlert" type="button" value="Join alert" onclick="joinAlert();"><br>
+            <input id="joinSubmit" type="button" value="Submit" onclick="joinAppointment();">
+        </div>
+        <div>
+            <pre id="appointments">
+[]
+            </pre>
+        </div>
+    </body>
+</html>

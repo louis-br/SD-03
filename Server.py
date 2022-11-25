@@ -1,6 +1,7 @@
 from datetime import datetime
 from threading import Lock, Timer
 from Utils.Appointment import Appointment
+from queue import Queue
 
 
 def printcall(f):
@@ -26,32 +27,37 @@ class Server(object):
         self.scheduledAlerts: dict[datetime, ScheduledAlerts] = {}
         self.appointmentsMutex = Lock()
 
+    #@expose
+    @printcall
+    def register_user(self, user: str):
+        with self.usersMutex:
+            self.users[user] = Queue()
+    
     def get_user(self, user: str):
         with self.usersMutex:
             if user not in self.users:
                 print(f'User: {user} not found. ')
                 return None
-            return Pyro5.api.Proxy(self.users[user])
+            return self.users[user]
 
-    #@expose
-    @printcall
-    def register_user(self, user: str, uri: str):
-        with self.usersMutex:
-            self.users[user] = uri
-        return self.signer.public_key_b64()
+    def user_event(self, user: Queue, event_name: str, event: dict):
+        user = self.get_user(user)
+        if user:
+            user.put({'event': event_name, 'data': event})
 
-    def alert(self, time: datetime):
+    def alert_event(self, time: datetime):
         if time not in self.scheduledAlerts:
             return
         alert = self.scheduledAlerts[time]
         for appointment in alert.appointments:
             for user, expected in appointment.alerts.items():
-                if expected == time:
-                    self.alert_event(user, appointment)
+                if expected != time:
+                    continue
+                self.user_event(user, 'alert', appointment.to_dict())
 
     def new_alert_timer(self, time: datetime):
         print(f'New timer: {time}')
-        timer = Timer((time - datetime.now()).total_seconds(), self.alert, args=(time,))
+        timer = Timer((time - datetime.now()).total_seconds(), self.alert_event, args=(time,))
         timer.start()
         return timer
 
@@ -101,18 +107,6 @@ class Server(object):
             self.scheduledAlerts[alert].timer.cancel()
             del self.scheduledAlerts[alert]
 
-    def new_appointment_event(self, user: str, appointment: Appointment):
-        user = self.get_user(user)
-        if user:
-            dict = appointment.to_dict()
-            signature = self.signer.sign_b64(self.signer.json_dict_bytes(dict))
-            user.new_appointment_event(dict, signature)
-
-    def alert_event(self, user: str, appointment: Appointment):
-        user = self.get_user(user)
-        if user:
-            user.alert_event(appointment.to_dict())
-
     #@expose
     @printcall
     def register_appointment(self, user: str, name: str, date: float, guests: dict[str, True], alerts: dict[str, float]):
@@ -127,7 +121,7 @@ class Server(object):
             while len(guests) > 0:
                 guest = keys.pop()
                 del guests[guest]
-                self.new_appointment_event(guest, appointment)
+                self.user_event(user, 'invited', appointment.to_dict())
             self.add_user_appointment(user, appointment)
 
     #@expose
