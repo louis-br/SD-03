@@ -73,8 +73,9 @@ class Server(object):
         if user not in self.appointments:
             self.appointments[user] = []
         appointments = self.appointments[user]
-        appointments.append(appointment)
-        appointments.sort()
+        if appointment not in appointments:
+            appointments.append(appointment)
+            appointments.sort()
         for user, alert in appointment.alerts.items():
             self.add_user_alert(user, appointment, alert)
 
@@ -113,7 +114,7 @@ class Server(object):
         date = datetime.fromtimestamp(date)
         alerts = {user: datetime.fromtimestamp(alert) for user, alert in alerts.items()}
         with self.appointmentsMutex:
-            if name in self.appointments:
+            if user in self.appointments and name in self.appointments[user]:
                 print(f'Appointment {name} already registered')
             appointment = Appointment(user, name, date, guests, alerts)
             guests = appointment.guests
@@ -121,7 +122,23 @@ class Server(object):
             while len(guests) > 0:
                 guest = keys.pop()
                 del guests[guest]
-                self.user_event(user, 'invited', appointment.to_dict())
+                self.user_event(guest, 'invited', appointment.to_dict())
+            self.add_user_appointment(user, appointment)
+
+    @printcall
+    def join_appointment(self, user: str, owner: str, name: str, alerts: dict[str, float]):
+        alerts = {user: datetime.fromtimestamp(alert) for user, alert in alerts.items()}
+        with self.appointmentsMutex:
+            if not owner in self.appointments:
+                print(f'Owner {owner} not found')
+                return
+            appointment = [a for a in self.appointments[owner] if a.name == name]
+            if len(appointment) == 0:
+                print(f'Appointment {name} not found')
+                return
+            appointment = appointment[0]
+            for user, alert in alerts.items():
+                appointment.alerts[user] = alert
             self.add_user_appointment(user, appointment)
 
     #@expose

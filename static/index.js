@@ -20,12 +20,41 @@ setInterval(minDatetime, 1000, "date");
 setInterval(minDatetime, 1000, "alert");
 setInterval(minDatetime, 1000, "joinAlert");
 
+function invitedHandler(event) {
+    if (confirm(`New invite: \n${event.data}`)) {
+        console.log(event.data);
+        data = JSON.parse(event.data);
+        let owner = document.getElementById("joinOwner");
+        let name = document.getElementById("joinAppointmentName");
+        let alertElement = document.getElementById("joinAlert");
+
+        owner.value = data.owner;
+        name.value = data.name;
+        alertElement.showPicker();
+    }
+}
+
+function alertHandler(event) {
+    alert(`Alert: \n${event.data}`);
+}
+
+let eventSource = null;
+
 function register() {
     let username = document.getElementById("username").value;
 
     fetch(`users/${username}`, {
         method: "POST"
     });
+
+    if (eventSource) {
+        eventSource.close()
+    }
+
+    eventSource = new EventSource(`users/${username}/events`);
+
+    eventSource.addEventListener("invited", invitedHandler);
+    eventSource.addEventListener("alert", alertHandler);
 
     updateAppointments();
 }
@@ -42,17 +71,15 @@ function updateAppointments() {
 }
 
 function newAppointment() {
-    let username =  document.getElementById("username");
-    let name =      document.getElementById("appointmentName");
-    let dateTime =  document.getElementById("date");
-    let alertTime = document.getElementById("alert");
-    let guests =    document.getElementById("guests");
+    let username =  document.getElementById("username").value;
+    let name =      document.getElementById("appointmentName").value;
+    let dateTime =  document.getElementById("date").value;
+    let alertTime = document.getElementById("alert").value;
+    let guests =    document.getElementById("guests").value;
 
-    username = username.value;
-    name = name.value;
-    dateTime = new Date(dateTime.value);
-    alertTime = new Date(alertTime.value);
-    guests = guests.value.split(',')
+    dateTime = new Date(dateTime);
+    alertTime = new Date(alertTime);
+    guests = guests.split(',')
 
     body = {
         "guests": {},
@@ -82,7 +109,31 @@ function newAppointment() {
 }
 
 function joinAppointment() {
+    let username =  document.getElementById("username").value;
+    let owner = document.getElementById("joinOwner").value;
+    let name = document.getElementById("joinAppointmentName").value;
+    let alertTime = document.getElementById("joinAlert").value;
 
+    alertTime = new Date(alertTime);
+
+    body = {}
+
+    if (document.getElementById("joinAlertEnabled").checked) {
+        body = {
+            [username]: alertTime.getTime()/1000
+        }
+    }
+
+    fetch(`appointments/${name}?user=${username}&owner=${owner}`, {
+        body: JSON.stringify(body),
+        headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json"
+        },
+        method: "PUT"
+    })
+
+    updateAppointments();
 }
 
 function cancelObject(url) {
@@ -102,8 +153,4 @@ function cancel() {
 
 function cancelAlert() {
     cancelObject("alerts")
-}
-
-function joinAlert() {
-    
 }
